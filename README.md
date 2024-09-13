@@ -1,2 +1,2 @@
 # gmodmanager
-A manager for mods and modpacks for Garry's Mod
+A mod and modpack manager for Garry's Mod
