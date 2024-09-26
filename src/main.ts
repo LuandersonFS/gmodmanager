@@ -1,18 +1,16 @@
-//@ts-ignore
 import * as http from "node:http";
-//@ts-ignore
 import * as https from "node:https";
-//@ts-ignore
 import { createWriteStream, writeFileSync } from "node:fs";
 
-const logLevel = {
-  0: "LOG",
-  1: "WARN",
-  2: "ERROR",
-  LOG: 0,
-  WARN: 1,
-  ERROR: 2,
-};
+const logLevel: { 0: "LOG"; 1: "WARN"; 2: "ERROR"; LOG: 0; WARN: 1; ERROR: 2 } =
+  {
+    0: "LOG",
+    1: "WARN",
+    2: "ERROR",
+    LOG: 0,
+    WARN: 1,
+    ERROR: 2,
+  };
 
 const protocol = { "http:": http, "https:": https };
 const linkQueue: string[] = [];
@@ -23,14 +21,16 @@ const fetchOptions = {
   },
 };
 
-const input =
-  "https://steamcommunity.com/sharedfiles/filedetails/?id=3329291214";
+const input = [
+  "https://steamcommunity.com/sharedfiles/filedetails/?id=3329291214",
+  "wss://steamcommunity.com/sharedfiles/filedetails/?id=3329291214",
+];
 
 log("Queuing " + input, 0);
-linkQueue.push(input);
+linkQueue.push(...input);
 
 for (let n = 0; !!linkQueue[n]; n++) {
-  const link = new URL(input);
+  const link = new URL(linkQueue[n]);
 
   if (!(link.protocol in protocol)) {
     log(
@@ -39,10 +39,14 @@ for (let n = 0; !!linkQueue[n]; n++) {
       } is not supported.`,
       1
     );
+    continue;
   }
 
   const filePath = `./examples/${link.searchParams.get("id")}.html`;
-  const request = protocol[link.protocol].get(input, fetchOptions);
+  const request = protocol[link.protocol as "http:" | "https:"].get(
+    link.href,
+    fetchOptions
+  );
 
   request.on("response", (res) => {
     log("Response received from " + link.href, 0);
@@ -62,13 +66,14 @@ for (let n = 0; !!linkQueue[n]; n++) {
       .on("end", () => {
         log(filePath + " writed", 0);
       })
-      .on("error",(err)=>{log("Error while fetching: " + err, 2)})
+      .on("error", (err) => {
+        log("Error while fetching: " + err, 2);
+      })
       .pipe(ws);
   });
 }
-
 function log(msg: string, type: 0 | 1 | 2) {
-  console[logLevel[type].toLowerCase()](
+  console[logLevel[type].toLowerCase() as "log" | "warn" | "error"](
     `[${new Date().toLocaleTimeString(undefined, {
       hour: "2-digit",
       minute: "2-digit",
